@@ -1,0 +1,10 @@
+{
+  "name": "oh-my-claude-code-slim",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OMO-slim orchestration port for Claude Code (directive + anchor hooks, five specialist subagents, ported OMO skills).",
+  "license": "MIT",
+  "scripts": {
+    "validate": "node scripts/validate.mjs"
+  }
+}

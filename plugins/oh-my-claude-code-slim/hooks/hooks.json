@@ -1,0 +1,36 @@
+{
+  "description": "oh-my-claude-code-slim: inject the orchestrator directive at SessionStart (split into two <10k parts to respect the additionalContext limit) and a per-turn root-only anchor at UserPromptSubmit.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "session-start", "1"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "session-start", "2"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "user-prompt-submit"],
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

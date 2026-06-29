@@ -1,0 +1,9 @@
+# Internal deepwork notes + throwaway probes (not part of the published plugin)
+.slim/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store

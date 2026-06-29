@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "omcc-slim",
+  "description": "Marketplace for oh-my-claude-code-slim — an OMO-slim orchestration port for Claude Code.",
+  "owner": { "name": "YanzuoLu" },
+  "plugins": [
+    {
+      "name": "oh-my-claude-code-slim",
+      "source": "./plugins/oh-my-claude-code-slim",
+      "description": "OMO-slim orchestration port for Claude Code: SessionStart directive + per-turn anchor hooks, five specialist subagents (explorer, librarian, oracle, designer, fixer), and ported OMO skills.",
+      "version": "0.1.0",
+      "author": { "name": "YanzuoLu" },
+      "category": "productivity"
+    }
+  ]
+}

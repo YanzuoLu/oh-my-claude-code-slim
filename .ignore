@@ -1,0 +1,3 @@
+# Keep .slim readable to local search tools (ripgrep) even though git ignores it.
+!.slim/
+!.slim/**
