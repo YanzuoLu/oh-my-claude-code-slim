@@ -21,7 +21,8 @@ const read = (p) => readFileSync(p, 'utf8');
 // 1. plugin.json
 const manifest = JSON.parse(read(path.join(pluginDir, '.claude-plugin', 'plugin.json')));
 check(manifest.name === 'oh-my-claude-code-slim', 'plugin.json name must be "oh-my-claude-code-slim"');
-check(manifest.hooks === './hooks/hooks.json', 'plugin.json must reference "./hooks/hooks.json"');
+check(manifest.hooks === undefined, 'plugin.json must NOT declare "hooks" — hooks/hooks.json is auto-loaded; declaring it duplicates the load and fails the plugin');
+check(existsSync(path.join(pluginDir, 'hooks', 'hooks.json')), 'hooks/hooks.json must exist (auto-loaded by Claude Code)');
 
 // 2. marketplace.json (subdir source, per oracle G3)
 const market = JSON.parse(read(path.join(root, '.claude-plugin', 'marketplace.json')));
