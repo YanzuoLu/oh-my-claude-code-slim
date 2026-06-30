@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "oh-my-claude-code-slim",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OMO-slim orchestration port for Claude Code: a SessionStart orchestrator directive, a per-turn root-only anchor, five specialist subagents (explorer, librarian, oracle, designer, fixer), and ported OMO skills. Claude Code's built-in subagents remain available.",
   "author": { "name": "YanzuoLu" },
   "homepage": "https://github.com/YanzuoLu/oh-my-claude-code-slim",

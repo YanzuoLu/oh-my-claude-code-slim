@@ -14,7 +14,7 @@ const pluginDir = path.join(root, 'plugins', 'oh-my-claude-code-slim');
 const hookDir = path.join(pluginDir, 'components', 'orchestrator-hook');
 const cliPath = path.join(hookDir, 'cli.cjs');
 const roles = ['explorer', 'librarian', 'oracle', 'designer', 'fixer'];
-const roleModel = { explorer: 'claude-opus-4-6', librarian: 'claude-opus-4-6', oracle: 'claude-opus-4-8', designer: 'claude-opus-4-8', fixer: 'claude-opus-4-8' };
+const roleModel = { explorer: 'claude-opus-4-8', librarian: 'claude-opus-4-8', oracle: 'claude-opus-4-8', designer: 'claude-opus-4-8', fixer: 'claude-opus-4-8' };
 
 const errors = [];
 const check = (cond, msg) => { if (!cond) errors.push(msg); };

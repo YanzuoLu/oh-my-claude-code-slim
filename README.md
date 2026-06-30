@@ -37,12 +37,12 @@ Start a new session to load it. Update with `claude plugin update oh-my-claude-c
 
 ## Models & effort
 
-Models are tiered within the Opus family: `explorer`/`librarian` run on `claude-opus-4-6`
-(lighter, faster, cheaper — for recon and research), while `oracle`/`designer`/`fixer` run on
-`claude-opus-4-8` (full Opus — for architecture, design, and implementation). All five lanes use
-`max` effort. Note: a global `CLAUDE_CODE_EFFORT_LEVEL` env var sets effort for every session and
-**overrides** per-agent `effort` frontmatter; `max` is only persistable via that env var (the
-`effortLevel` setting accepts up to `xhigh`).
+All five lanes run on `claude-opus-4-8`. Effort is tiered per role: `explorer`/`librarian` =
+`medium` (lighter, faster recon and research), `oracle`/`designer`/`fixer` = `max` (deepest
+reasoning for architecture, design, and implementation). Per-agent `effort` frontmatter overrides
+the session effort level. Note: an active `CLAUDE_CODE_EFFORT_LEVEL` env var is highest precedence
+and would override per-agent effort — to keep per-role tiers, set your default via the `effortLevel`
+setting (e.g. `xhigh`) instead of that env var.
 
 Read-only lanes restrict their tools: `explorer` (Read/Glob/Grep) and `librarian`
 (Read/Glob/Grep/WebFetch/WebSearch) cannot write; `oracle` blocks Write/Edit but keeps Bash for
