@@ -1,7 +1,7 @@
 ---
 name: designer
 description: UI/UX design, review, and implementation. Use for styling, responsive design, component architecture and visual polish.
-model: claude-opus-4-8
+model: claude-opus-4-8[1m]
 effort: max
 color: pink
 ---

@@ -1,7 +1,7 @@
 ---
 name: librarian
 description: External documentation and library research. Use for official docs lookup, GitHub examples, and understanding library internals.
-model: claude-opus-4-8
+model: claude-opus-4-8[1m]
 effort: medium
 tools: Read, Glob, Grep, WebFetch, WebSearch
 color: blue

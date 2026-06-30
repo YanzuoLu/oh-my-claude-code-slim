@@ -1,7 +1,7 @@
 ---
 name: oracle
 description: Strategic technical advisor. Use for architecture decisions, complex debugging, code review, simplification, and engineering guidance.
-model: claude-opus-4-8
+model: claude-opus-4-8[1m]
 effort: max
 disallowedTools: Write, Edit, NotebookEdit
 color: purple

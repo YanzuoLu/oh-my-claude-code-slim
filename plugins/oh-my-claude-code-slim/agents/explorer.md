@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Fast codebase search and pattern matching. Use for finding files, locating code patterns, and answering 'where is X?' questions.
-model: claude-opus-4-8
+model: claude-opus-4-8[1m]
 effort: medium
 tools: Read, Glob, Grep
 color: cyan

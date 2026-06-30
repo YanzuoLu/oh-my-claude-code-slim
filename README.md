@@ -37,7 +37,7 @@ Start a new session to load it. Update with `claude plugin update oh-my-claude-c
 
 ## Models & effort
 
-All five lanes run on `claude-opus-4-8`. Effort is tiered per role: `explorer`/`librarian` =
+All five lanes run on `claude-opus-4-8[1m]` (the 1M-token context window variant). Effort is tiered per role: `explorer`/`librarian` =
 `medium` (lighter, faster recon and research), `oracle`/`designer`/`fixer` = `max` (deepest
 reasoning for architecture, design, and implementation). Per-agent `effort` frontmatter overrides
 the session effort level. Note: an active `CLAUDE_CODE_EFFORT_LEVEL` env var is highest precedence

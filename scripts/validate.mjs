@@ -14,7 +14,7 @@ const pluginDir = path.join(root, 'plugins', 'oh-my-claude-code-slim');
 const hookDir = path.join(pluginDir, 'components', 'orchestrator-hook');
 const cliPath = path.join(hookDir, 'cli.cjs');
 const roles = ['explorer', 'librarian', 'oracle', 'designer', 'fixer'];
-const roleModel = { explorer: 'claude-opus-4-8', librarian: 'claude-opus-4-8', oracle: 'claude-opus-4-8', designer: 'claude-opus-4-8', fixer: 'claude-opus-4-8' };
+const roleModel = { explorer: 'claude-opus-4-8[1m]', librarian: 'claude-opus-4-8[1m]', oracle: 'claude-opus-4-8[1m]', designer: 'claude-opus-4-8[1m]', fixer: 'claude-opus-4-8[1m]' };
 
 const errors = [];
 const check = (cond, msg) => { if (!cond) errors.push(msg); };
@@ -83,7 +83,7 @@ for (const r of roles) {
   const a = read(ap);
   check(a.startsWith('---'), `agents/${r}.md must start with YAML frontmatter`);
   check(new RegExp(`name:\\s*${r}\\b`).test(a), `agents/${r}.md frontmatter name must be "${r}"`);
-  check(new RegExp(`model:\\s*${roleModel[r]}`).test(a), `agents/${r}.md must set model ${roleModel[r]}`);
+  check(a.includes(`model: ${roleModel[r]}`), `agents/${r}.md must set model ${roleModel[r]}`);
   check(/\neffort:\s*\S+/.test(a), `agents/${r}.md must set effort`);
   for (const banned of ['permissionMode:', 'mcpServers:', 'hooks:']) {
     check(!new RegExp(`\\n${banned}`).test(a), `agents/${r}.md must not set "${banned}" (ignored for plugin agents)`);
