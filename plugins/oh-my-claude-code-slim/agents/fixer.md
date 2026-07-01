@@ -1,8 +1,7 @@
 ---
 name: fixer
 description: Fast implementation specialist. Receives complete context and task spec, executes code changes efficiently.
-model: claude-opus-4-8[1m]
-effort: max
+model: inherit
 disallowedTools: WebFetch, WebSearch, Agent
 color: green
 ---

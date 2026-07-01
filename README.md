@@ -37,12 +37,14 @@ Start a new session to load it. Update with `claude plugin update oh-my-claude-c
 
 ## Models & effort
 
-All five lanes run on `claude-opus-4-8[1m]` (the 1M-token context window variant). Effort is tiered per role: `explorer`/`librarian` =
-`medium` (lighter, faster recon and research), `oracle`/`designer`/`fixer` = `max` (deepest
-reasoning for architecture, design, and implementation). Per-agent `effort` frontmatter overrides
-the session effort level. Note: an active `CLAUDE_CODE_EFFORT_LEVEL` env var is highest precedence
-and would override per-agent effort — to keep per-role tiers, set your default via the `effortLevel`
-setting (e.g. `xhigh`) instead of that env var.
+`explorer` and `librarian` default to a lighter, cheaper tier for fast recon/research —
+`claude-opus-4-8` at `effort: medium`. `oracle`, `designer`, and `fixer` use `model: inherit` with no
+`effort` set, so they **follow your main session's model and effort**.
+
+Tune any lane without editing the plugin: drop a same-named agent file in `~/.claude/agents/<name>.md`
+(user scope overrides the plugin) with your own `model`/`effort`; or set `CLAUDE_CODE_SUBAGENT_MODEL`
+(model, all subagents) / `CLAUDE_CODE_EFFORT_LEVEL` (effort, all) globally. The inherit lanes follow
+your session (`/model`, `/effort`, settings `model`/`effortLevel`).
 
 Read-only lanes restrict their tools: `explorer` (Read/Glob/Grep) and `librarian`
 (Read/Glob/Grep/WebFetch/WebSearch) cannot write; `oracle` blocks Write/Edit but keeps Bash for
