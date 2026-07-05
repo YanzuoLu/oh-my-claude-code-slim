@@ -135,7 +135,7 @@ Balance: respect dependencies, avoid parallelizing what must be sequential, and 
 - Route implementation to @fixer or multiple @fixer instances for maximum parallel execution
 - If a request spans multiple lanes, delegate only the lanes that add clear value
 
-## 6. Verify
+## 5. Verify
 - Run relevant checks/diagnostics for the change
 - Use validation routing when applicable instead of doing all review work yourself
 - If test files are involved, prefer @fixer for bounded test changes and @oracle only for test strategy or quality review
