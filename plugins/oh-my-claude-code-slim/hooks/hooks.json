@@ -1,21 +1,15 @@
 {
-  "description": "oh-my-claude-code-slim: inject the orchestrator directive at SessionStart (split into two <10k parts to respect the additionalContext limit) and a per-turn root-only anchor at UserPromptSubmit.",
+  "description": "oh-my-claude-code-slim: orchestrator-gated hooks. UserPromptSubmit injects the scheduler phase reminder each turn; PostToolUse (Read|Write|Edit) re-injects it at most once per turn after direct file work; PreToolUse (Agent|Task) denies spawning anything but the five plugin specialists. All fire only when the active agent is the plugin orchestrator (default sessions and subagents are unaffected); OMCC_SLIM_DISABLE=1 silences everything.",
   "hooks": {
-    "SessionStart": [
+    "PreToolUse": [
       {
-        "matcher": "startup|clear|compact",
+        "matcher": "Agent|Task",
         "hooks": [
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "session-start", "1"],
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "session-start", "2"],
-            "timeout": 10
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/reminder.cjs", "agent-gate"],
+            "timeout": 5
           }
         ]
       }
@@ -26,7 +20,20 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/components/orchestrator-hook/cli.cjs", "user-prompt-submit"],
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/reminder.cjs", "prompt"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/reminder.cjs", "nudge"],
             "timeout": 5
           }
         ]
