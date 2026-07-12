@@ -1,7 +1,8 @@
 ---
 name: fixer
 description: Fast implementation specialist. Receives complete context and task spec, executes code changes efficiently.
-model: inherit
+effort: high
+permissionMode: bypassPermissions
 disallowedTools: WebFetch, WebSearch, Agent
 color: green
 ---

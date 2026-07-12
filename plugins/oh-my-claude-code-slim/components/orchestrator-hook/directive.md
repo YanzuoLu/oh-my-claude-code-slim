@@ -105,15 +105,17 @@ Can tasks be split into parallel specialist work?
 
 Balance: respect dependencies, avoid parallelizing what must be sequential, and avoid overlapping write ownership.
 
-### Background Task Discipline
+### Delegation Completion Discipline
 - Prefer the `Agent` tool (specialist subagents) for delegated work that can run independently.
-- Delegate so the orchestrator stays focused and reconciles each subagent's returned summary.
-- Track each delegation's specialist, objective, and file/topic ownership.
+- A foreground Agent (`run_in_background: false`) blocks and returns one final summary; consume that tool result directly.
+- A background Agent returns launch metadata first. Its completion or failure is delivered automatically; do not poll it. If no independent work remains, end the turn and wait for the notification.
+- A `name@session-*` value is an agent-team teammate ID, not a `TaskOutput` task ID. Wait for its automatic `<teammate-message>`; use `SendMessage` for follow-up or resume, and `TaskStop` only when it must be stopped.
+- `TaskOutput` is deprecated and only accepts IDs registered by the background-task system. Never pass it a teammate ID or a numeric `TaskCreate` checklist ID. For background Bash or remote tasks, prefer `Read` on the returned output file path; local background Agent results arrive automatically and their transcript `.output` files must not be read.
+- Track each delegation's specialist, objective, state, and file/topic ownership.
 - Continue orchestration only on non-overlapping work; otherwise briefly report what was delegated and stop.
 - Before local edits or another writer delegation, compare against in-flight delegation scopes.
 - Parallel subagents are allowed only when their write scopes do not conflict.
-- Let each delegated subagent finish, then reconcile its returned summary before acting on it; never advance dependent work with partial or unreconciled results.
-- Reconcile the results of every subagent you delegated before the final response.
+- Reconcile every delegated result before dependent work or the final response; never act on partial or unreconciled results.
 
 ### Design Handoff Discipline
 - When @designer completes UI/UX work, treat layout, spacing, hierarchy, motion, color, affordances, and component feel as intentional design output.
@@ -123,10 +125,10 @@ Balance: respect dependencies, avoid parallelizing what must be sequential, and 
 - If follow-up work is purely mechanical and preserves the design exactly, @fixer can handle it. If it requires visual judgment or changes the feel, route it back to @designer.
 
 ### Delegation Scoping
-- Claude Code subagents are one-shot: each runs in an isolated context and returns a summary; a finished subagent cannot be resumed.
-- Give complete context and a clear deliverable up front, since you cannot incrementally continue a returned subagent.
+- Each Claude Code subagent runs in an isolated context. Foreground calls return one final result; background and named agents report completion automatically and can be continued with `SendMessage` when preserving their context adds value.
+- Give complete context and a clear deliverable up front so the first pass can finish independently.
 - Prefer one well-scoped delegation over many tiny ones.
-- Split into parallel subagents only when their scopes don't overlap; for tightly-coupled follow-ups, reuse your own context instead of re-delegating.
+- Split into parallel subagents only when scopes do not overlap. For tightly-coupled follow-ups, continue the same named agent or reuse the orchestrator's context instead of spawning a fresh agent.
 
 ### Validation routing
 - Validation is a workflow stage owned by the Orchestrator, not a separate specialist

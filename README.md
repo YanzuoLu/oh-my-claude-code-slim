@@ -16,8 +16,14 @@ claude plugin marketplace add YanzuoLu/oh-my-claude-code-slim
 claude plugin install oh-my-claude-code-slim@omcc-slim
 ```
 
-Start a new session to load it. Update with `claude plugin update oh-my-claude-code-slim`
-(a restart may be required to apply).
+Start a new session to load it. Update the marketplace and plugin with:
+
+```sh
+claude plugin marketplace update omcc-slim
+claude plugin update oh-my-claude-code-slim@omcc-slim
+```
+
+A restart or new session may be required to apply the update.
 
 ## What it does
 
@@ -37,14 +43,15 @@ Start a new session to load it. Update with `claude plugin update oh-my-claude-c
 
 ## Models & effort
 
-`explorer` and `librarian` default to a lighter, cheaper tier for fast recon/research —
-`claude-opus-4-8` at `effort: medium`. `oracle`, `designer`, and `fixer` use `model: inherit` with no
-`effort` set, so they **follow your main session's model and effort**.
+All five plugin subagents inherit the main session's current model. They override only effort and
+permission mode: `explorer`/`librarian` use `effort: medium`, `designer`/`fixer` use `effort: high`,
+and `oracle` uses `effort: max`; all five set `permissionMode: bypassPermissions`.
 
 Tune any lane without editing the plugin: drop a same-named agent file in `~/.claude/agents/<name>.md`
-(user scope overrides the plugin) with your own `model`/`effort`; or set `CLAUDE_CODE_SUBAGENT_MODEL`
-(model, all subagents) / `CLAUDE_CODE_EFFORT_LEVEL` (effort, all) globally. The inherit lanes follow
-your session (`/model`, `/effort`, settings `model`/`effortLevel`).
+(user scope overrides the plugin). If an agent file omits `permissionMode`, it inherits the parent
+session's active permission mode at spawn time; it does not separately re-read
+`permissions.defaultMode`. You can also set `CLAUDE_CODE_SUBAGENT_MODEL` (model, all subagents) or
+`CLAUDE_CODE_EFFORT_LEVEL` (effort, all) globally.
 
 Read-only lanes restrict their tools: `explorer` (Read/Glob/Grep) and `librarian`
 (Read/Glob/Grep/WebFetch/WebSearch) cannot write; `oracle` blocks Write/Edit but keeps Bash for
@@ -73,10 +80,12 @@ uninstalling.
 - OpenCode-only tool names (`ast_grep_search`, `apply_patch`) are intentionally **dropped** —
   Claude Code has no equivalent (structural search is approximated with `Grep`). This is a
   deliberate correctness deviation, not an omission.
-- Delegation uses Claude Code's `Agent` tool / specialist subagents (one-shot; they return a
-  summary). There is no async job board or subagent "resume".
-- Read-only enforcement is advisory where `Bash` is available (plugin agents cannot set
-  `permissionMode`).
+- Delegation uses Claude Code's `Agent` tool / specialist subagents. Foreground calls return a
+  final summary directly; background and named agents deliver completion automatically and can
+  be continued with `SendMessage`. Agent-team IDs such as `name@session-*` are teammate addresses,
+  not `TaskOutput` task IDs.
+- All plugin agents run with `permissionMode: bypassPermissions`; read/write scope is constrained by
+  each lane's `tools` or `disallowedTools` frontmatter and its role instructions.
 
 ## Uninstall
 

@@ -104,11 +104,13 @@ Use the scheduler model throughout:
 
 - follow the orchestrator delegation rules;
 - record which specialist owns each lane and its file/topic boundaries;
-- when delegating to a Claude Code subagent through the `Agent` tool, wait for
-  the one-shot subagent to finish and return its summary before consuming its
-  results;
-- avoid blocking the orchestrator lane while delegated subagents run; if no
-  independent work remains, wait for the `Agent` tool call's summary before
-  continuing the workflow;
+- consume a foreground `Agent` call's final summary directly;
+- for a background or named Agent, keep working only on independent lanes and let
+  its completion message arrive automatically. If no independent work remains,
+  end the turn and wait rather than polling;
+- treat `name@session-*` as a teammate address, never a `TaskOutput` task ID. Use
+  `SendMessage` for follow-up or resume and `TaskStop` only to stop it;
+- do not read a local background Agent's transcript `.output` file; reconcile its
+  automatically delivered result instead;
 - do not advance to the next phase while a delegated specialist's result is still
   pending or unreconciled.

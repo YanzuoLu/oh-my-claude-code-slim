@@ -1,7 +1,8 @@
 ---
 name: designer
 description: UI/UX design, review, and implementation. Use for styling, responsive design, component architecture and visual polish.
-model: inherit
+effort: high
+permissionMode: bypassPermissions
 color: pink
 ---
 

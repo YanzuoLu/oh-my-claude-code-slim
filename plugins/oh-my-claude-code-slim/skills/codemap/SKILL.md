@@ -52,7 +52,7 @@ This creates:
 - `.slim/codemap.json` - File and folder hashes for change detection
 - Empty `codemap.md` files in all relevant subdirectories
 
-4. **Delegate codemap writing to Fixer agents** - Use the `Agent` tool to run one-shot fixer subagents, one per folder, to read code and create or update each specific `codemap.md` file.
+4. **Delegate codemap writing to Fixer agents** - Use the `Agent` tool to launch one well-scoped fixer per folder to read code and create or update that folder's `codemap.md`. Consume foreground results directly, or wait for automatic background completion messages before continuing.
 
 ### Step 3: Detect Changes (If state already exists)
 
@@ -69,7 +69,7 @@ node "<codemap-skill-dir>/scripts/codemap.mjs" changes \
    - Modified files
    - Affected folders
 
-3. **Only update affected codemaps** - Use the `Agent` tool to run one-shot fixer subagents, one per affected folder, to update its `codemap.md`.
+3. **Only update affected codemaps** - Use the `Agent` tool to launch one well-scoped fixer per affected folder to update its `codemap.md`. Consume foreground results directly, or wait for automatic background completion messages before continuing.
 4. **Run update** to save new state:
 
 ```bash

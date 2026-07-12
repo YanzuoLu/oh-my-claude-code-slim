@@ -8,7 +8,7 @@
       "name": "oh-my-claude-code-slim",
       "source": "./plugins/oh-my-claude-code-slim",
       "description": "OMO-slim orchestration port for Claude Code: SessionStart directive + per-turn anchor hooks, five specialist subagents (explorer, librarian, oracle, designer, fixer), and ported OMO skills.",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "author": { "name": "YanzuoLu" },
       "category": "productivity"
     }

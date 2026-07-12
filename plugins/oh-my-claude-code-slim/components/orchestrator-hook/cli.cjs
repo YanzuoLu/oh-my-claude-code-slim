@@ -3,15 +3,16 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-// omo-slim's per-turn reminder (PHASE_REMINDER), adapted to Claude Code: CC subagents are
-// one-shot and return a summary synchronously (no async job board / resume), so the omo
-// "wait for hook-driven completion / do not poll running jobs" phrasing is reconciled to
-// "delegate -> reconcile returned summaries -> verify".
+// omo-slim's per-turn reminder (PHASE_REMINDER), adapted to Claude Code's two completion
+// paths: foreground Agents return one final tool result, while background/named Agents report
+// completion automatically and can be continued with SendMessage. Teammate IDs are addresses,
+// not TaskOutput task IDs.
 const PHASE_REMINDER =
   '<internal_reminder>!IMPORTANT! Scheduler workflow: plan lanes/dependencies → ' +
-  'delegate to specialist subagents → reconcile their returned summaries → verify. ' +
-  'Run independent subagents in parallel (non-overlapping scopes); do not act on partial ' +
-  'results or fabricate progress for delegated work. !END!</internal_reminder>';
+  'delegate to specialist subagents → reconcile foreground results or automatic background ' +
+  'completion messages → verify. Run independent subagents in parallel (non-overlapping scopes); ' +
+  'do not act on partial results, fabricate progress, or pass teammate IDs to TaskOutput. ' +
+  '!END!</internal_reminder>';
 
 // The full directive exceeds Claude Code's 10,000-char additionalContext limit, so it is
 // delivered in two SessionStart outputs split on the <Workflow> tag boundary:

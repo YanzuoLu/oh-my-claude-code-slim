@@ -14,8 +14,8 @@ const pluginDir = path.join(root, 'plugins', 'oh-my-claude-code-slim');
 const hookDir = path.join(pluginDir, 'components', 'orchestrator-hook');
 const cliPath = path.join(hookDir, 'cli.cjs');
 const roles = ['explorer', 'librarian', 'oracle', 'designer', 'fixer'];
-const roleModel = { explorer: 'claude-opus-4-8', librarian: 'claude-opus-4-8', oracle: 'inherit', designer: 'inherit', fixer: 'inherit' };
-const roleEffort = { explorer: 'medium', librarian: 'medium', oracle: null, designer: null, fixer: null };
+const roleEffort = { explorer: 'medium', librarian: 'medium', oracle: 'max', designer: 'high', fixer: 'high' };
+const rolePermissionMode = Object.fromEntries(roles.map((role) => [role, 'bypassPermissions']));
 
 const errors = [];
 const check = (cond, msg) => { if (!cond) errors.push(msg); };
@@ -73,9 +73,19 @@ check(anchorSub === '', 'UserPromptSubmit must emit NOTHING in a subagent sessio
 const disabled = runHook(['session-start', '1'], { hook_event_name: 'SessionStart', source: 'startup' }, { OMCC_SLIM_DISABLE: '1' });
 check(disabled === '', 'OMCC_SLIM_DISABLE=1 must silence the hook');
 
-// 5. directive.md has the four sections (runtime split already asserted above)
+// 5. directive.md has the four sections and a current Claude Code delegation contract
 const directive = read(path.join(hookDir, 'directive.md')).replace(/\r\n/g, '\n').trim();
 for (const tag of ['<Role>', '<Agents>', '<Workflow>', '<Communication>']) check(directive.includes(tag), `directive.md missing section ${tag}`);
+check(directive.includes('`name@session-*`') && directive.includes('not a `TaskOutput` task ID'), 'directive.md must state that name@session-* is a teammate ID, not a TaskOutput task ID');
+check(directive.includes('<teammate-message>') && directive.includes('`SendMessage`') && directive.includes('`TaskStop`'), 'directive.md must document automatic teammate completion plus SendMessage/TaskStop control');
+check(directive.includes('`TaskOutput` is deprecated'), 'directive.md must mark TaskOutput as deprecated and scoped to registered background tasks');
+check(!directive.includes('Claude Code subagents are one-shot'), 'directive.md must not claim all Claude Code subagents are one-shot');
+const cliSource = read(cliPath);
+check(!cliSource.includes('one-shot and return a summary synchronously'), 'cli.cjs must not describe all subagents as synchronous one-shot calls');
+check(anchorRoot.includes('automatic background completion messages') && anchorRoot.includes('teammate IDs to TaskOutput'), 'UserPromptSubmit anchor must preserve the background completion and teammate-ID guardrail');
+const deepworkSource = read(path.join(pluginDir, 'skills', 'deepwork', 'SKILL.md'));
+check(!deepworkSource.includes('one-shot subagent'), 'deepwork must not describe every delegated Agent as a one-shot subagent');
+check(deepworkSource.includes('`name@session-*`') && deepworkSource.includes('`SendMessage`'), 'deepwork must preserve teammate ID and SendMessage lifecycle guidance');
 
 // 6. agents: model, effort, read-only tool posture, and forbidden plugin-agent fields
 for (const r of roles) {
@@ -84,14 +94,11 @@ for (const r of roles) {
   const a = read(ap);
   check(a.startsWith('---'), `agents/${r}.md must start with YAML frontmatter`);
   check(new RegExp(`name:\\s*${r}\\b`).test(a), `agents/${r}.md frontmatter name must be "${r}"`);
-  check(a.includes(`model: ${roleModel[r]}`), `agents/${r}.md must set model ${roleModel[r]}`);
-  if (roleEffort[r]) {
-    check(a.includes(`effort: ${roleEffort[r]}`), `agents/${r}.md must set effort ${roleEffort[r]}`);
-  } else {
-    check(!/\neffort:/.test(a), `agents/${r}.md must NOT set effort (inherits the session effort)`);
-  }
-  for (const banned of ['permissionMode:', 'mcpServers:', 'hooks:']) {
-    check(!new RegExp(`\\n${banned}`).test(a), `agents/${r}.md must not set "${banned}" (ignored for plugin agents)`);
+  check(!/\nmodel:/.test(a), `agents/${r}.md must not override the parent session model`);
+  check(a.includes(`effort: ${roleEffort[r]}`), `agents/${r}.md must set effort ${roleEffort[r]}`);
+  check(a.includes(`permissionMode: ${rolePermissionMode[r]}`), `agents/${r}.md must set permissionMode ${rolePermissionMode[r]}`);
+  for (const banned of ['mcpServers:', 'hooks:']) {
+    check(!new RegExp(`\\n${banned}`).test(a), `agents/${r}.md must not set "${banned}"`);
   }
   const toolsLine = (a.match(/\ntools:\s*(.+)/) || [])[1] || '';
   const denyLine = (a.match(/\ndisallowedTools:\s*(.+)/) || [])[1] || '';
@@ -109,6 +116,7 @@ for (const r of roles) {
 // 7. Codex/OpenCode residue — directive + agents + skills (full banlist)
 const residue = ['exec_command', 'apply_patch', 'spawn_agent', 'wait_agent', 'resume_agent', 'close_agent', 'gpt-5.5', '${PLUGIN_ROOT}', 'ast_grep_search', 'ast_grep_replace', '$CODEX_HOME', 'developer_instructions', 'model_reasoning_effort', 'service_tier'];
 const skillFiles = readdirSync(path.join(pluginDir, 'skills')).map((d) => path.join(pluginDir, 'skills', d, 'SKILL.md')).filter(existsSync);
+for (const f of skillFiles) check(!read(f).includes('one-shot fixer subagents'), `${path.relative(root, f)} must not describe fixer agents with the obsolete one-shot lifecycle`);
 const scanFiles = [path.join(hookDir, 'directive.md'), ...roles.map((r) => path.join(pluginDir, 'agents', `${r}.md`)), ...skillFiles];
 for (const f of scanFiles) {
   const t = read(f);
@@ -118,6 +126,8 @@ for (const f of scanFiles) {
 const readmeResidue = ['exec_command', 'spawn_agent', 'wait_agent', 'resume_agent', 'close_agent', 'gpt-5.5', '${PLUGIN_ROOT}', '$CODEX_HOME', 'developer_instructions', 'model_reasoning_effort'];
 const readme = read(path.join(root, 'README.md'));
 for (const tok of readmeResidue) if (readme.includes(tok)) errors.push(`README.md contains banned token: ${tok}`);
+check(readme.includes('`name@session-*`') && readme.includes('not `TaskOutput` task IDs'), 'README.md must document teammate IDs separately from TaskOutput task IDs');
+check(!readme.includes('There is no async job board or subagent "resume"'), 'README.md must not retain the obsolete no-background/no-resume lifecycle claim');
 
 // 8. defer schema validation to the real CLI
 let strictOk = false;
