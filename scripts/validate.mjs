@@ -117,7 +117,11 @@ if (existsSync(orchPath)) {
   check(o.includes('permissionMode: bypassPermissions'), 'orchestrator must set permissionMode: bypassPermissions');
   check(!/\nmodel:/.test(o), 'orchestrator must not pin a model (inherit the session model)');
   check(!/\nmcpServers:/.test(o) && !/\ntools:/.test(o), 'orchestrator must not set mcpServers/tools');
-  check(!/\ndisallowedTools:/.test(o), 'orchestrator must not set disallowedTools — on CC 2.1.207 any "Agent(...)" entry removes the entire Agent tool and kills delegation; the native-subagent ban is enforced by the agent-gate PreToolUse hook');
+  const orchDenyLine = ((o.match(/\ndisallowedTools:\s*(.+)/) || [])[1] || '').trim();
+  check(orchDenyLine === 'EnterPlanMode', 'orchestrator disallowedTools must be exactly "EnterPlanMode" — users control entry into Plan Mode');
+  check(!orchDenyLine.includes('ExitPlanMode'), 'orchestrator must keep ExitPlanMode available for plan approval');
+  check(o.includes('Never call or initiate `EnterPlanMode`') && o.includes('only the user may enter Plan Mode through Claude Code UI/command'), 'orchestrator.md must forbid self-initiated Plan Mode entry');
+  check(o.includes('If the user has already entered Plan Mode') && o.includes('use `ExitPlanMode` to submit it for approval'), 'orchestrator.md must preserve the native user-entered Plan Mode flow and ExitPlanMode approval');
   for (const tag of ['<Role>', '<Agents>', '<Workflow>', '<Communication>']) check(o.includes(tag), `orchestrator.md missing section ${tag}`);
   for (const lane of roles) check(o.includes(`@${lane}`), `orchestrator.md missing @${lane} routing block`);
   for (const tok of ['run_in_background', '`SendMessage`', '`TaskStop`', '`AskUserQuestion`']) check(o.includes(tok), `orchestrator.md must reference ${tok}`);

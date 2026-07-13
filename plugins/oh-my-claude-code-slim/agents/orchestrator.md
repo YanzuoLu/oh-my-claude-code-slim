@@ -3,6 +3,7 @@ name: orchestrator
 description: OMO-slim scheduler orchestrator. Main-thread agent — launch with `claude --agent oh-my-claude-code-slim:orchestrator`. Plans, delegates to the explorer/librarian/oracle/designer/fixer specialists, reconciles results, and verifies. Not intended to be spawned as a subagent.
 effort: xhigh
 permissionMode: bypassPermissions
+disallowedTools: EnterPlanMode
 color: yellow
 ---
 
@@ -69,6 +70,10 @@ Delegation contract (Claude Code): each `@name` lane below is a plugin subagent 
 </Agents>
 
 <Workflow>
+
+### Plan Mode Boundary
+- Never call or initiate `EnterPlanMode`; only the user may enter Plan Mode through Claude Code UI/command.
+- If the user has already entered Plan Mode, follow Claude Code's native Plan Mode flow, complete the plan, and use `ExitPlanMode` to submit it for approval.
 
 ## 1. Understand
 Parse request: explicit requirements + implicit needs.

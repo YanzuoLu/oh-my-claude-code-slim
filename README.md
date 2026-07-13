@@ -42,7 +42,7 @@ except that the specialists and skills remain visible (a plugin cannot hide its 
 
 | Agent | Lane | Effort | Access posture |
 |---|---|---|---|
-| `orchestrator` | plan / delegate / reconcile / verify | xhigh | full tools; may spawn **only** the five lanes below |
+| `orchestrator` | plan / delegate / reconcile / verify | xhigh | all tools except `EnterPlanMode`; may spawn **only** the five lanes below |
 | `explorer` | fast codebase recon | medium | read-only (prompt-enforced) |
 | `librarian` | external docs / web research | medium | read-only (prompt-enforced), WebSearch/WebFetch |
 | `oracle` | architecture, debugging strategy, review | max | read-only (prompt-enforced) |
@@ -56,6 +56,9 @@ is no separate reviewer agent.
 Hard restrictions are deliberately minimal, mirroring upstream (where read-only lanes are also
 prompt-governed rather than permission-locked):
 
+- The orchestrator sets `disallowedTools: EnterPlanMode` — it cannot initiate Plan Mode. Users
+  may still enter Plan Mode through the Claude Code UI/command, and `ExitPlanMode` remains
+  available to submit the plan for approval.
 - Each specialist sets `disallowedTools: Agent` — subagents cannot spawn subagents (the
   OpenCode rule).
 - A `PreToolUse` hook on `Agent|Task` denies the orchestrator any `subagent_type` other than
@@ -63,7 +66,7 @@ prompt-governed rather than permission-locked):
   (`general-purpose`, `Explore`, `Plan`, …). A frontmatter denylist can't express this: on
   Claude Code 2.1.207 a `disallowedTools: Agent(Explore)` entry removes the **entire** `Agent`
   tool.
-- Nothing else is tool-restricted. `oracle`/`explorer`/`librarian` READ-ONLY and `fixer`'s
+- No other tools are hard-restricted. `oracle`/`explorer`/`librarian` READ-ONLY and `fixer`'s
   "no external research" are prompt-level constraints, not hard bans — by design, not a bug.
 
 Tune any lane without editing the plugin: drop a same-named agent file in
