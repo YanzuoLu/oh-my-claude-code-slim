@@ -89,8 +89,11 @@ subagents see nothing), and never block on errors:
 
 ## Skills
 
-Six ported OMO skills: `simplify`, `deepwork`, `reflect`, `codemap`, `clonedeps`,
-`worktrees`. The orchestration workflow itself lives in the orchestrator agent, not a skill.
+Five loaded OMO skills: `simplify`, `reflect`, `codemap`, `clonedeps`, `worktrees`.
+`deepwork` is ported but kept unloaded at `skills-disabled/deepwork/` — the manifest
+`skills` field only appends to the default `skills/` scan, so moving a skill out of
+`skills/` is the only way to exclude it. The orchestration workflow itself lives in the
+orchestrator agent, not a skill.
 
 ## Disable
 

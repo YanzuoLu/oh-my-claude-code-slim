@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "oh-my-claude-code-slim",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "OMO-slim orchestration port for Claude Code: an orchestrator agent launched with `claude --agent oh-my-claude-code-slim:orchestrator`, five specialist subagents (explorer, librarian, oracle, designer, fixer) with prompt-governed lanes, orchestrator-gated phase-reminder and file-tool-nudge hooks, and ported OMO skills.",
   "author": { "name": "YanzuoLu" },
   "homepage": "https://github.com/YanzuoLu/oh-my-claude-code-slim",
