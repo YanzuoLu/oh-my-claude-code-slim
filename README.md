@@ -42,7 +42,7 @@ except that the specialists and skills remain visible (a plugin cannot hide its 
 
 | Agent | Lane | Effort | Access posture |
 |---|---|---|---|
-| `orchestrator` | plan / delegate / reconcile / verify | xhigh | all tools except `EnterPlanMode`; may spawn **only** the five lanes below |
+| `orchestrator` | plan / delegate / reconcile / verify | xhigh | full tools; `EnterPlanMode` denied by hook; may spawn **only** the five lanes below |
 | `explorer` | fast codebase recon | medium | read-only (prompt-enforced) |
 | `librarian` | external docs / web research | medium | read-only (prompt-enforced), WebSearch/WebFetch |
 | `oracle` | architecture, debugging strategy, review | max | read-only (prompt-enforced) |
@@ -56,12 +56,13 @@ is no separate reviewer agent.
 Hard restrictions are deliberately minimal, mirroring upstream (where read-only lanes are also
 prompt-governed rather than permission-locked):
 
-- A `PreToolUse` hook on `EnterPlanMode` denies orchestrator-initiated Plan Mode. The
-  orchestrator's `disallowedTools: EnterPlanMode` frontmatter entry is kept as documentation,
-  but on CC 2.1.211 it is NOT applied to a main-thread `--agent` session (the tool stays in
-  the tool list), so the hook is the enforcement mechanism — same reason the agent-gate lives
-  in a hook. Users may still enter Plan Mode through the Claude Code UI/command, and
-  `ExitPlanMode` remains available to submit the plan for approval.
+- A `PreToolUse` hook on `EnterPlanMode` denies orchestrator-initiated Plan Mode. Frontmatter
+  `disallowedTools: EnterPlanMode` was NOT applied to a main-thread `--agent` session (observed
+  on CC 2.1.211: the tool stayed in the tool list), so the orchestrator sets no
+  `disallowedTools` and the hook is the enforcement mechanism — same reason the agent-gate
+  lives in a hook. (The subagent spawn path does apply frontmatter denylists; the specialists'
+  `disallowedTools: Agent` relies on that.) Users may still enter Plan Mode through the Claude
+  Code UI/command, and `ExitPlanMode` remains available to submit the plan for approval.
 - Each specialist sets `disallowedTools: Agent` — subagents cannot spawn subagents (the
   OpenCode rule).
 - A `PreToolUse` hook on `Agent|Task` denies the orchestrator any `subagent_type` other than

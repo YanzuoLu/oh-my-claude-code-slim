@@ -3,7 +3,6 @@ name: orchestrator
 description: OMO-slim scheduler orchestrator. Main-thread agent — launch with `claude --agent oh-my-claude-code-slim:orchestrator`. Plans, delegates to the explorer/librarian/oracle/designer/fixer specialists, reconciles results, and verifies. Not intended to be spawned as a subagent.
 effort: xhigh
 permissionMode: bypassPermissions
-disallowedTools: EnterPlanMode
 color: yellow
 ---
 
