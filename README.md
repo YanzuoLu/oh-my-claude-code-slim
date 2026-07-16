@@ -56,9 +56,12 @@ is no separate reviewer agent.
 Hard restrictions are deliberately minimal, mirroring upstream (where read-only lanes are also
 prompt-governed rather than permission-locked):
 
-- The orchestrator sets `disallowedTools: EnterPlanMode` — it cannot initiate Plan Mode. Users
-  may still enter Plan Mode through the Claude Code UI/command, and `ExitPlanMode` remains
-  available to submit the plan for approval.
+- A `PreToolUse` hook on `EnterPlanMode` denies orchestrator-initiated Plan Mode. The
+  orchestrator's `disallowedTools: EnterPlanMode` frontmatter entry is kept as documentation,
+  but on CC 2.1.211 it is NOT applied to a main-thread `--agent` session (the tool stays in
+  the tool list), so the hook is the enforcement mechanism — same reason the agent-gate lives
+  in a hook. Users may still enter Plan Mode through the Claude Code UI/command, and
+  `ExitPlanMode` remains available to submit the plan for approval.
 - Each specialist sets `disallowedTools: Agent` — subagents cannot spawn subagents (the
   OpenCode rule).
 - A `PreToolUse` hook on `Agent|Task` denies the orchestrator any `subagent_type` other than

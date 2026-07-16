@@ -1,6 +1,6 @@
 {
   "name": "oh-my-claude-code-slim",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "description": "OMO-slim orchestration port for Claude Code (orchestrator agent via --agent, five specialist subagents, reminder hooks, ported OMO skills).",
   "license": "MIT",

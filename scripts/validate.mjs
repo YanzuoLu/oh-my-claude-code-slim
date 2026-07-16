@@ -49,6 +49,10 @@ const preGroup = hooks.hooks?.PreToolUse?.[0];
 check(!!preGroup?.matcher && /(^|\|)Agent(\||$)/.test(preGroup.matcher) && /(^|\|)Task(\||$)/.test(preGroup.matcher), 'PreToolUse matcher must cover Agent and Task (legacy alias)');
 const preHandler = preGroup?.hooks?.[0];
 check((preHandler?.args || []).join(' ').includes('reminder.cjs') && (preHandler?.args || []).includes('agent-gate'), 'PreToolUse must run reminder.cjs in "agent-gate" mode — the frontmatter Agent(type) denylist removes the whole Agent tool on CC 2.1.207, so the hook is the enforcement mechanism');
+const planGroup = (hooks.hooks?.PreToolUse || []).find((g) => /(^|\|)EnterPlanMode(\||$)/.test(g?.matcher || ''));
+check(!!planGroup, 'PreToolUse must have an EnterPlanMode matcher group — frontmatter disallowedTools is not applied to a main-thread --agent session on CC 2.1.211, so the hook is the enforcement mechanism');
+const planHandler = planGroup?.hooks?.[0];
+check((planHandler?.args || []).join(' ').includes('reminder.cjs') && (planHandler?.args || []).includes('plan-gate'), 'the EnterPlanMode PreToolUse group must run reminder.cjs in "plan-gate" mode');
 
 // 4. reminder.cjs RUNTIME behavior — execute the real hook with payloads
 function runHook(mode, payload, extraEnv) {
@@ -106,6 +110,11 @@ for (const r of roles) {
   check(runHook('agent-gate', { hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_input: { subagent_type: `oh-my-claude-code-slim:${r}` }, session_id: 'vtest', agent_type: ORCH }) === '', `agent-gate must allow scoped specialist "oh-my-claude-code-slim:${r}"`);
 }
 check(runHook('agent-gate', { hook_event_name: 'PreToolUse', tool_name: 'Agent', tool_input: { subagent_type: 'Explore' }, session_id: 'vtest' }) === '', 'agent-gate must be silent outside orchestrator sessions');
+
+// plan-gate: deny EnterPlanMode in orchestrator sessions, silent elsewhere
+const planDeny = parseOut(runHook('plan-gate', { hook_event_name: 'PreToolUse', tool_name: 'EnterPlanMode', tool_input: {}, session_id: 'vtest', agent_type: ORCH }));
+check(planDeny?.permissionDecision === 'deny', 'plan-gate must deny EnterPlanMode in orchestrator sessions');
+check(runHook('plan-gate', { hook_event_name: 'PreToolUse', tool_name: 'EnterPlanMode', tool_input: {}, session_id: 'vtest' }) === '', 'plan-gate must be silent outside orchestrator sessions');
 
 // 5. agents/orchestrator.md — frontmatter + ported directive sections
 const orchPath = path.join(pluginDir, 'agents', 'orchestrator.md');

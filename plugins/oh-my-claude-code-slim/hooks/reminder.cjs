@@ -12,6 +12,10 @@
 //               lanes. (A frontmatter denylist like "Agent(Explore)" removes
 //               the whole Agent tool on Claude Code 2.1.207, so the gate must
 //               live here.)
+//   plan-gate   PreToolUse (EnterPlanMode) — deny; Plan Mode is user-initiated
+//               only. (Frontmatter `disallowedTools: EnterPlanMode` is not
+//               applied to a main-thread --agent session on CC 2.1.211 — the
+//               tool stays in the tool list — so the gate must live here.)
 // All modes fire only when the active agent is this plugin's orchestrator
 // (payload agent_type, with the CLAUDE_CODE_AGENT / CLAUDE_AGENT env vars as
 // fallback), so default sessions and specialist subagents are unaffected.
@@ -69,6 +73,15 @@ function main() {
         },
       })}\n`);
     }
+  } else if (mode === 'plan-gate') {
+    process.stdout.write(`${JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PreToolUse',
+        permissionDecision: 'deny',
+        permissionDecisionReason:
+          'oh-my-claude-code-slim: Plan Mode is user-initiated only — the orchestrator must never call EnterPlanMode. Continue with the scheduler workflow; the user can enter Plan Mode themselves via the Claude Code UI/command.',
+      },
+    })}\n`);
   }
 }
 
