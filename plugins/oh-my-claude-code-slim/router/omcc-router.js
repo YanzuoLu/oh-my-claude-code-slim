@@ -18,7 +18,14 @@ const https = require('node:https');
 const os = require('node:os');
 const path = require('node:path');
 
-const VERSION = '0.2.5';
+// Version follows the plugin manifest — single source of truth, no per-release edit.
+const VERSION = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.claude-plugin', 'plugin.json'), 'utf8')).version || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+})();
 const HOST = '127.0.0.1';
 const CONFIG_PATH = path.join(os.homedir(), '.config', 'omcc-slim', 'router.json');
 

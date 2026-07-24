@@ -10,7 +10,7 @@
       "name": "oh-my-claude-code-slim",
       "source": "./plugins/oh-my-claude-code-slim",
       "description": "OMO-slim orchestration port for Claude Code: an orchestrator agent launched via `claude --agent`, five specialist subagents (explorer, librarian, oracle, designer, fixer), orchestrator-gated reminder hooks, and ported OMO skills.",
-      "version": "0.2.6",
+      "version": "0.2.7",
       "author": {
         "name": "YanzuoLu"
       },
