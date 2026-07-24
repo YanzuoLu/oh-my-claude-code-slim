@@ -1,0 +1,8 @@
+{
+  "port": 8318,
+  "routes": [
+    { "name": "cpa",       "match": ["gpt"],        "baseUrl": "http://127.0.0.1:8317",       "tokenEnv": "CLAUDEX_TOKEN" },
+    { "name": "kimi",      "match": ["k3", "kimi"], "baseUrl": "https://api.kimi.com/coding", "tokenEnv": "KIMI_TOKEN" },
+    { "name": "anthropic", "match": ["*"],          "baseUrl": "https://api.anthropic.com",   "passthrough": true }
+  ]
+}

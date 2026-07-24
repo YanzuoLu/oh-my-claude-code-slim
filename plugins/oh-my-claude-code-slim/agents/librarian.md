@@ -2,6 +2,7 @@
 name: librarian
 description: External documentation and library research. Use for official docs lookup, GitHub examples, and understanding library internals.
 effort: medium
+model: haiku
 permissionMode: bypassPermissions
 disallowedTools: Agent
 color: blue

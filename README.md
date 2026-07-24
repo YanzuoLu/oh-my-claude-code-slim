@@ -49,9 +49,11 @@ except that the specialists and skills remain visible (a plugin cannot hide its 
 | `designer` | UI/UX design and implementation | high | read + write |
 | `fixer` | bounded implementation | high | read + write, no web research (prompt-enforced) |
 
-All agents inherit the main session's model (no `model:` pins) and set
-`permissionMode: bypassPermissions`. As in omo-slim, code review is the **oracle** lane; there
-is no separate reviewer agent.
+`explorer`, `librarian` and `fixer` are pinned to the `haiku` alias — in a normal session that
+is simply Claude haiku, and the `ANTHROPIC_DEFAULT_HAIKU_MODEL` env var can redirect the alias
+to any gateway model. `orchestrator`, `oracle` and `designer` still inherit the main session's
+model. All agents set `permissionMode: bypassPermissions`. As in omo-slim, code review is the
+**oracle** lane; there is no separate reviewer agent.
 
 Hard restrictions are deliberately minimal, mirroring upstream (where read-only lanes are also
 prompt-governed rather than permission-locked):
@@ -79,6 +81,38 @@ Tune any lane without editing the plugin: drop a same-named agent file in
 built-in subagents in every session (not just the orchestrator), add
 `{ "permissions": { "deny": ["Agent(Explore)"] } }` to your settings — note that applies
 session-wide.
+
+## Mixed-model sessions (claudem)
+
+`router/omcc-router.js` is a dependency-free splitter on `127.0.0.1:8318`. Point
+`ANTHROPIC_BASE_URL` at it and each request is routed by its `model` field: `claude*` →
+`api.anthropic.com` (headers/body passed through untouched), `*gpt*` → the local CLIProxyAPI at
+`127.0.0.1:8317`, `k3*`/`kimi*` → `api.kimi.com/coding`. A `SessionStart` hook auto-starts the
+router when the base URL targets 8318; plain sessions never touch it. With the cheap lanes
+pinned to `haiku`, overriding the alias steers them off-Anthropic while the main session stays
+on Claude:
+
+```fish
+function claudem
+    command env -u ANTHROPIC_API_KEY \
+        ANTHROPIC_BASE_URL="http://127.0.0.1:8318" \
+        ANTHROPIC_DEFAULT_HAIKU_MODEL="gpt-5.6-sol-fast[1m]" \
+        claude --agent oh-my-claude-code-slim:orchestrator $argv
+end
+```
+
+Requires `CLAUDEX_TOKEN` exported globally in the shell; the `claudemk` variant uses
+`ANTHROPIC_DEFAULT_HAIKU_MODEL="k3[1m]"` (Kimi cheap lanes) and needs `KIMI_TOKEN`.
+
+The route table is user-configurable: copy `router/router.example.json` to
+`~/.config/omcc-slim/router.json` and edit. Schema: `{ "port", "routes": [...] }` where each
+route is `{ name, match, baseUrl, tokenEnv | passthrough }` — `match` is a list of substrings
+tested against the lowercased model name (first hit in array order wins, `"*"` is the
+catch-all); `passthrough: true` forwards all client headers untouched, otherwise
+`Authorization` is replaced with `Bearer $<tokenEnv>`. The file's mtime is checked per request
+and the table hot-reloaded on change (a broken edit keeps the last good config; with no config
+file the builtin defaults apply and no checks happen). Adding a new preset = add one route to
+`router.json` plus (optionally) a fish function — no plugin upgrade needed.
 
 ## Hooks
 

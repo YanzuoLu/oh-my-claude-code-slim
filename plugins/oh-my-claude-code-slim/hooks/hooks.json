@@ -1,5 +1,5 @@
 {
-  "description": "oh-my-claude-code-slim: orchestrator-gated hooks. UserPromptSubmit injects the scheduler phase reminder each turn; PostToolUse (Read|Write|Edit) re-injects it at most once per turn after direct file work; PreToolUse (Agent|Task) denies spawning anything but the five plugin specialists; PreToolUse (EnterPlanMode) denies orchestrator-initiated Plan Mode (frontmatter disallowedTools is not applied to a main-thread --agent session). All fire only when the active agent is the plugin orchestrator (default sessions and subagents are unaffected); OMCC_SLIM_DISABLE=1 silences everything.",
+  "description": "oh-my-claude-code-slim: orchestrator-gated hooks. UserPromptSubmit injects the scheduler phase reminder each turn; PostToolUse (Read|Write|Edit) re-injects it at most once per turn after direct file work; PreToolUse (Agent|Task) denies spawning anything but the five plugin specialists; PreToolUse (EnterPlanMode) denies orchestrator-initiated Plan Mode (frontmatter disallowedTools is not applied to a main-thread --agent session). All fire only when the active agent is the plugin orchestrator (default sessions and subagents are unaffected); OMCC_SLIM_DISABLE=1 silences everything.；SessionStart 在 ANTHROPIC_BASE_URL 指向 8318 时自动拉起 omcc-router 模型分流器",
   "hooks": {
     "PreToolUse": [
       {
@@ -45,6 +45,18 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/reminder.cjs", "nudge"],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/router-ensure.cjs"],
             "timeout": 5
           }
         ]

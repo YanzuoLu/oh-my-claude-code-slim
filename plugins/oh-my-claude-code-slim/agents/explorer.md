@@ -2,6 +2,7 @@
 name: explorer
 description: Fast codebase search and pattern matching. Use for finding files, locating code patterns, and answering 'where is X?' questions.
 effort: medium
+model: haiku
 permissionMode: bypassPermissions
 disallowedTools: Agent
 color: cyan

@@ -32,10 +32,15 @@ check(!existsSync(path.join(pluginDir, 'components')), 'components/ must be gone
 const market = JSON.parse(read(path.join(root, '.claude-plugin', 'marketplace.json')));
 check(Array.isArray(market.plugins) && market.plugins.some((p) => p.source === './plugins/oh-my-claude-code-slim'), 'marketplace.json must list a plugin with source "./plugins/oh-my-claude-code-slim"');
 
-// 3. hooks.json — no SessionStart; prompt + nudge registrations
+// 3. hooks.json — SessionStart only for omcc-router auto-start; prompt + nudge registrations
 const hooksRaw = read(path.join(pluginDir, 'hooks', 'hooks.json'));
 const hooks = JSON.parse(hooksRaw);
-check(hooks.hooks?.SessionStart === undefined, 'hooks.json must NOT define SessionStart — the directive lives in agents/orchestrator.md now');
+const ssGroups = hooks.hooks?.SessionStart;
+check(Array.isArray(ssGroups) && ssGroups.length === 1 && ((ssGroups[0]?.hooks?.[0]?.args || []).join(' ')).includes('router-ensure.cjs'), 'hooks.json SessionStart must be exactly one group running router-ensure.cjs (omcc-router auto-start; the v0.1.x directive machinery stays removed)');
+check(existsSync(path.join(pluginDir, 'hooks', 'router-ensure.cjs')), 'hooks/router-ensure.cjs must exist (SessionStart auto-starts omcc-router)');
+check(existsSync(path.join(pluginDir, 'router', 'omcc-router.js')), 'router/omcc-router.js must exist (mixed-model splitter for claudem sessions)');
+const exampleRoutes = JSON.parse(read(path.join(pluginDir, 'router', 'router.example.json')));
+check(Array.isArray(exampleRoutes.routes) && exampleRoutes.routes.some((r) => r.passthrough === true), 'router/router.example.json must define routes with a passthrough fallback leg');
 check(hooksRaw.includes('${CLAUDE_PLUGIN_ROOT}'), 'hooks.json must use ${CLAUDE_PLUGIN_ROOT}');
 const upsHandler = hooks.hooks?.UserPromptSubmit?.[0]?.hooks?.[0];
 check((upsHandler?.args || []).join(' ').includes('reminder.cjs') && (upsHandler?.args || []).includes('prompt'), 'UserPromptSubmit must run reminder.cjs in "prompt" mode');
@@ -144,7 +149,11 @@ for (const r of roles) {
   const a = read(ap);
   check(a.startsWith('---'), `agents/${r}.md must start with YAML frontmatter`);
   check(new RegExp(`name:\\s*${r}\\b`).test(a), `agents/${r}.md frontmatter name must be "${r}"`);
-  check(!/\nmodel:/.test(a), `agents/${r}.md must not override the parent session model`);
+  if (['explorer', 'librarian', 'fixer'].includes(r)) {
+    check(/\nmodel:\s*haiku\b/.test(a), `agents/${r}.md must pin exactly "model: haiku" (cheap-lane alias; claudem redirects it via ANTHROPIC_DEFAULT_HAIKU_MODEL, plain sessions get Claude haiku)`);
+  } else {
+    check(!/\nmodel:/.test(a), `agents/${r}.md must not override the parent session model`);
+  }
   check(a.includes(`effort: ${roleEffort[r]}`), `agents/${r}.md must set effort ${roleEffort[r]}`);
   check(!/\ntools:/.test(a), `agents/${r}.md must not set a tools allowlist — lane posture is prompt-enforced (mirrors upstream)`);
   check(a.includes('permissionMode: bypassPermissions'), `agents/${r}.md must set permissionMode: bypassPermissions`);
@@ -171,7 +180,7 @@ for (const f of agentFiles) check(!read(f).includes('SessionStart'), `${path.rel
 const readme = read(path.join(root, 'README.md'));
 check(readme.includes('claude --agent oh-my-claude-code-slim:orchestrator'), 'README.md must document the --agent launch command');
 check(readme.includes('OMCC_SLIM_DISABLE'), 'README.md must document the kill switch');
-check(!readme.includes('SessionStart'), 'README.md must not claim SessionStart injection anymore');
+check(readme.includes('omcc-router') && readme.includes('claudem'), 'README.md must document the omcc-router mixed-model mode (claudem/claudemk)');
 
 // 9. defer schema validation to the real CLI
 let strictOk = false;
