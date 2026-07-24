@@ -3,6 +3,7 @@
   "routes": [
     { "name": "cpa",       "match": ["gpt"],        "baseUrl": "http://127.0.0.1:8317",       "tokenEnv": "CLAUDEX_TOKEN" },
     { "name": "kimi",      "match": ["k3", "kimi"], "baseUrl": "https://api.kimi.com/coding", "tokenEnv": "KIMI_TOKEN" },
-    { "name": "anthropic", "match": ["*"],          "baseUrl": "https://api.anthropic.com",   "passthrough": true }
+    { "name": "anthropic", "match": ["*"],          "baseUrl": "https://api.anthropic.com",   "passthrough": true },
+    { "name": "cpa-gpt-high", "match": ["gpt-sol-high"], "baseUrl": "http://127.0.0.1:8317", "tokenEnv": "CLAUDEX_TOKEN", "modelRewrite": "gpt-5.6-sol-fast", "effort": "high" }
   ]
 }

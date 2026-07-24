@@ -49,11 +49,13 @@ except that the specialists and skills remain visible (a plugin cannot hide its 
 | `designer` | UI/UX design and implementation | high | read + write |
 | `fixer` | bounded implementation | high | read + write, no web research (prompt-enforced) |
 
-`explorer`, `librarian` and `fixer` are pinned to the `haiku` alias — in a normal session that
-is simply Claude haiku, and the `ANTHROPIC_DEFAULT_HAIKU_MODEL` env var can redirect the alias
-to any gateway model. `orchestrator`, `oracle` and `designer` still inherit the main session's
-model. All agents set `permissionMode: bypassPermissions`. As in omo-slim, code review is the
-**oracle** lane; there is no separate reviewer agent.
+The agents map to four model tiers, each bound to an overridable alias: `orchestrator`
+inherits the main session's model; `oracle` pins the `opus` alias; `fixer` and `designer`
+share the `sonnet` alias; `explorer` and `librarian` share the `haiku` alias. In a normal
+session the aliases resolve to the real Claude tiers; the `ANTHROPIC_DEFAULT_OPUS_MODEL` /
+`ANTHROPIC_DEFAULT_SONNET_MODEL` / `ANTHROPIC_DEFAULT_HAIKU_MODEL` env vars can redirect any
+of them to a gateway model. All agents set `permissionMode: bypassPermissions`. As in
+omo-slim, code review is the **oracle** lane; there is no separate reviewer agent.
 
 Hard restrictions are deliberately minimal, mirroring upstream (where read-only lanes are also
 prompt-governed rather than permission-locked):
@@ -88,31 +90,49 @@ session-wide.
 `ANTHROPIC_BASE_URL` at it and each request is routed by its `model` field: `claude*` →
 `api.anthropic.com` (headers/body passed through untouched), `*gpt*` → the local CLIProxyAPI at
 `127.0.0.1:8317`, `k3*`/`kimi*` → `api.kimi.com/coding`. A `SessionStart` hook auto-starts the
-router when the base URL targets 8318; plain sessions never touch it. With the cheap lanes
-pinned to `haiku`, overriding the alias steers them off-Anthropic while the main session stays
-on Claude:
+router when the base URL targets 8318; plain sessions never touch it.
 
-```fish
-function claudem
-    command env -u ANTHROPIC_API_KEY \
-        ANTHROPIC_BASE_URL="http://127.0.0.1:8318" \
-        ANTHROPIC_DEFAULT_HAIKU_MODEL="gpt-5.6-sol-fast[1m]" \
-        claude --agent oh-my-claude-code-slim:orchestrator $argv
-end
-```
+Three fish functions mirror omo-slim's fable/kimi/gpt presets. The orchestrator always
+inherits the preset's main-session model; the `opus` / `sonnet` / `haiku` alias tiers land as
+follows:
 
-Requires `CLAUDEX_TOKEN` exported globally in the shell; the `claudemk` variant uses
-`ANTHROPIC_DEFAULT_HAIKU_MODEL="k3[1m]"` (Kimi cheap lanes) and needs `KIMI_TOKEN`.
+| Function | omo preset | orchestrator (main) | oracle (`opus`) | fixer + designer (`sonnet`) | explorer + librarian (`haiku`) |
+|---|---|---|---|---|---|
+| `claudem`  | fable | Claude fable (session default) | Claude opus      | gpt-5.6-sol-fast | gpt-5.6-sol-fast |
+| `claudemk` | kimi  | k3                             | Claude opus      | gpt-5.6-sol-fast | gpt-5.6-sol-fast |
+| `claudemg` | gpt   | gpt-5.6-sol-fast               | gpt-5.6-sol-fast | gpt-5.6-sol-fast | gpt-5.6-sol-fast |
+
+Tokens (exported globally in the shell): `claudem` needs `CLAUDEX_TOKEN` (gpt cheap lanes);
+`claudemk` needs `KIMI_TOKEN` (k3 main) plus `CLAUDEX_TOKEN`; `claudemg` needs `CLAUDEX_TOKEN`
+only. The plain-session functions `claude` / `claudex` / `claudek` do not point at the router
+and are unaffected by these pins — each already overrides the haiku/opus aliases with its own
+model, so they stay single-model sessions.
 
 The route table is user-configurable: copy `router/router.example.json` to
 `~/.config/omcc-slim/router.json` and edit. Schema: `{ "port", "routes": [...] }` where each
-route is `{ name, match, baseUrl, tokenEnv | passthrough }` — `match` is a list of substrings
-tested against the lowercased model name (first hit in array order wins, `"*"` is the
-catch-all); `passthrough: true` forwards all client headers untouched, otherwise
-`Authorization` is replaced with `Bearer $<tokenEnv>`. The file's mtime is checked per request
-and the table hot-reloaded on change (a broken edit keeps the last good config; with no config
-file the builtin defaults apply and no checks happen). Adding a new preset = add one route to
+route is `{ name, match, baseUrl, tokenEnv | passthrough, modelRewrite?, effort? }` — `match`
+is a list of substrings tested against the lowercased model name (first hit in array order
+wins, `"*"` is the catch-all); `passthrough: true` forwards all client headers untouched,
+otherwise `Authorization` is replaced with `Bearer $<tokenEnv>`; `modelRewrite` / `effort`
+rewrite the body's `model` / `output_config.effort` on that leg (the body is re-serialized
+only when one of them is set). The file's mtime is checked per request and the table
+hot-reloaded on change (a broken edit keeps the last good config; with no config file the
+builtin defaults apply and no checks happen). Adding a new preset = add one route to
 `router.json` plus (optionally) a fish function — no plugin upgrade needed.
+
+### 配置自由度
+
+- **Model binding** — the four tiers are env-bound: the orchestrator follows the session model
+  (`--model`), the other tiers follow `ANTHROPIC_DEFAULT_OPUS_MODEL`,
+  `ANTHROPIC_DEFAULT_SONNET_MODEL` and `ANTHROPIC_DEFAULT_HAIKU_MODEL`. Repoint any tier at
+  any gateway model without editing the plugin.
+- **Effort, three layers** — (1) each agent's frontmatter carries the plugin's default effort;
+  (2) when a tier is bound to GPT, CLIProxyAPI accepts an effort suffix in the model name,
+  e.g. `ANTHROPIC_DEFAULT_HAIKU_MODEL="gpt-5.6-sol-fast(high)"`; (3) a `router.json` route can
+  force `effort` / `modelRewrite` per match, hot-reloaded (see the `cpa-gpt-high` example in
+  `router/router.example.json`).
+- Do NOT set `CLAUDE_CODE_EFFORT_LEVEL`: it flattens every tier to a single effort globally
+  and defeats the four-tier split.
 
 ## Hooks
 

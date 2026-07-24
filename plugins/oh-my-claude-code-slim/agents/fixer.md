@@ -2,7 +2,7 @@
 name: fixer
 description: Fast implementation specialist. Receives complete context and task spec, executes code changes efficiently.
 effort: high
-model: haiku
+model: sonnet
 permissionMode: bypassPermissions
 disallowedTools: Agent
 color: green

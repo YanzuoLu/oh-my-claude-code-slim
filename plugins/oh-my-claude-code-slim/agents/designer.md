@@ -2,6 +2,7 @@
 name: designer
 description: UI/UX design, review, and implementation. Use for styling, responsive design, component architecture and visual polish.
 effort: high
+model: sonnet
 permissionMode: bypassPermissions
 disallowedTools: Agent
 color: pink

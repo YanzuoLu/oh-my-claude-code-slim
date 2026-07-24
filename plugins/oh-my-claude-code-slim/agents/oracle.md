@@ -2,6 +2,7 @@
 name: oracle
 description: Strategic technical advisor. Use for architecture decisions, complex debugging, code review, simplification, and engineering guidance.
 effort: max
+model: opus
 permissionMode: bypassPermissions
 disallowedTools: Agent
 color: purple

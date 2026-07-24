@@ -149,10 +149,12 @@ for (const r of roles) {
   const a = read(ap);
   check(a.startsWith('---'), `agents/${r}.md must start with YAML frontmatter`);
   check(new RegExp(`name:\\s*${r}\\b`).test(a), `agents/${r}.md frontmatter name must be "${r}"`);
-  if (['explorer', 'librarian', 'fixer'].includes(r)) {
-    check(/\nmodel:\s*haiku\b/.test(a), `agents/${r}.md must pin exactly "model: haiku" (cheap-lane alias; claudem redirects it via ANTHROPIC_DEFAULT_HAIKU_MODEL, plain sessions get Claude haiku)`);
+  if (['explorer', 'librarian'].includes(r)) {
+    check(/\nmodel:\s*haiku\b/.test(a), `agents/${r}.md must pin exactly "model: haiku" (haiku 档; claudem presets redirect it via ANTHROPIC_DEFAULT_HAIKU_MODEL, plain sessions get Claude haiku)`);
+  } else if (['fixer', 'designer'].includes(r)) {
+    check(/\nmodel:\s*sonnet\b/.test(a), `agents/${r}.md must pin exactly "model: sonnet" — fixer 与 designer 共享 sonnet 档 (redirected via ANTHROPIC_DEFAULT_SONNET_MODEL in mixed presets)`);
   } else {
-    check(!/\nmodel:/.test(a), `agents/${r}.md must not override the parent session model`);
+    check(/\nmodel:\s*opus\b/.test(a), `agents/${r}.md must pin exactly "model: opus" (opus 档, oracle 专用; redirected via ANTHROPIC_DEFAULT_OPUS_MODEL only in the gpt preset)`);
   }
   check(a.includes(`effort: ${roleEffort[r]}`), `agents/${r}.md must set effort ${roleEffort[r]}`);
   check(!/\ntools:/.test(a), `agents/${r}.md must not set a tools allowlist — lane posture is prompt-enforced (mirrors upstream)`);

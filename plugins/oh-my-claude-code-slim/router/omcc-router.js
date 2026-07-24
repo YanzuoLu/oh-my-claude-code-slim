@@ -5,8 +5,11 @@
 // each request is routed by the JSON body's `model` field according to a route
 // table. Routes come from ~/.config/omcc-slim/router.json when present, else the
 // builtin defaults below (gpt -> local CLIProxyAPI, k3/kimi -> api.kimi.com/coding,
-// * -> api.anthropic.com passthrough). The file's mtime is statSync'd per request
-// and the table hot-reloaded on change; a broken edit keeps the last good config.
+// * -> api.anthropic.com passthrough). A route may optionally set "modelRewrite"
+// (rewrite the body's model field) and/or "effort" (set output_config.effort) —
+// only then is the body parsed/re-serialized; all other legs forward the raw
+// buffer byte-for-byte. The file's mtime is statSync'd per request and the table
+// hot-reloaded on change; a broken edit keeps the last good config.
 // Responses are streamed (SSE-safe). One log line per proxied request on stdout.
 
 const fs = require('node:fs');
@@ -98,7 +101,12 @@ const server = http.createServer((req, res) => {
       version: VERSION,
       uptime: Math.floor((Date.now() - START) / 1000),
       config: configSource,
-      routes: config.routes.map((r) => r.name),
+      routes: config.routes.map((rt) => {
+        const notes = [];
+        if (rt.modelRewrite !== undefined) notes.push('rewrite');
+        if (rt.effort !== undefined) notes.push(`effort:${rt.effort}`);
+        return notes.length ? `${rt.name}(${notes.join(',')})` : rt.name;
+      }),
     }));
     return;
   }
@@ -115,6 +123,22 @@ const server = http.createServer((req, res) => {
     res.on('finish', () => {
       console.log(`[${new Date().toISOString()}] model=${model || 'claude'} leg=${r.name} path=${req.url} status=${res.statusCode} ms=${Date.now() - t0}`);
     });
+
+    // Optional route-level rewrites: the body is parsed/re-serialized ONLY when
+    // the matched route configures modelRewrite and/or effort; every other leg
+    // forwards the raw buffer byte-for-byte (passthrough purity preserved).
+    let outBody = body;
+    if (r.modelRewrite !== undefined || r.effort !== undefined) {
+      try {
+        const parsed = JSON.parse(body.toString('utf8'));
+        if (r.modelRewrite !== undefined) parsed.model = r.modelRewrite;
+        if (r.effort !== undefined) {
+          if (!parsed.output_config || typeof parsed.output_config !== 'object') parsed.output_config = {};
+          parsed.output_config.effort = r.effort;
+        }
+        outBody = Buffer.from(JSON.stringify(parsed), 'utf8');
+      } catch { outBody = body; } // unparseable body: forward untouched
+    }
 
     // Copy every original header; rebuild host/content-length/connection per
     // spec. passthrough legs keep the client Authorization untouched; token
@@ -133,7 +157,7 @@ const server = http.createServer((req, res) => {
       }
       headers.authorization = `Bearer ${token}`;
     }
-    headers['content-length'] = body.length;
+    headers['content-length'] = outBody.length;
 
     const upstreamReq = (String(r.baseUrl).startsWith('https') ? https : http).request(r.baseUrl + req.url, {
       method: req.method,
@@ -152,7 +176,7 @@ const server = http.createServer((req, res) => {
       if (res.headersSent) { res.destroy(); return; }
       sendError(res, 502, 'api_error', `omcc-router: upstream ${r.name} connect failed: ${err.message}`);
     });
-    upstreamReq.end(body); // raw buffer, never re-serialized
+    upstreamReq.end(outBody); // raw buffer unless the route rewrote it
   });
 });
 
